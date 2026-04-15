@@ -724,7 +724,12 @@ require('lazy').setup({
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
-        ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
+        ensure_installed = {
+          'omnisharp',
+          'clangd',
+          'clang-format',
+          'codelldb',
+        },
         automatic_installation = false,
         handlers = {
           function(server_name)
@@ -1019,3 +1024,15 @@ require('lazy').setup({
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
 vim.opt.shellcmdflag = '-c'
+
+-- Custom init.lua configuration
+vim.lsp.config('omnisharp', {
+  cmd = { 'omnisharp' },
+  enable_roslyn_analyzers = true,
+  organize_imports_on_format = true,
+  enable_import_completion = true,
+})
+
+vim.keymap.set('n', '<leader>t', ':lcd %:p:h | terminal<CR>')
+vim.keymap.set('n', '<Tab>', ':tabnext<CR>')
+vim.keymap.set('n', '<S-Tab>', ':tabprevious<CR>')

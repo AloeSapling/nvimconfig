@@ -686,6 +686,9 @@ require('lazy').setup({
           },
         },
         clangd = {},
+        ts_ls = {},
+        eslint = {},
+        tailwindcss = {},
         -- gopls = {},
         -- pyright = {},
         -- rust_analyzer = {},
@@ -1034,27 +1037,11 @@ require('lazy').setup({
 vim.opt.shellcmdflag = '-c'
 
 -- Custom init.lua configuration
-vim.lsp.config('omnisharp', {
-  settings = {
-    RoslynExtensionsOptions = {
-      EnableAnalyzersSupport = true,
-      EnableImportCompletion = true,
-    },
-    FormattingOptions = {
-      EnableEditorConfigSupport = true,
-    },
-    AnalysisLevel = 'latest',
-    EnableEditorConfigSupport = true,
-  },
-})
-
-vim.lsp.enable 'omnisharp'
-
 vim.keymap.set('n', '<leader>t', ':lcd %:p:h | terminal<CR>')
-vim.keymap.set('n', '<leader><Tab>', ':tabnext<CR>')
+vim.keymap.set('n', '<Tab>', ':tabnext<CR>')
 vim.keymap.set('n', '<S-Tab>', ':tabprevious<CR>')
 vim.keymap.set('t', '<Esc>', [[<C-\><C-n>]])
-vim.keymap.set('n', '<Tab>', ':bnext<CR>')
-vim.keymap.set('n', '<S-Tab>', vim.cmd.bprevious)
+vim.keymap.set('n', '<leader><Tab>', ':bnext<CR>')
+vim.keymap.set('n', '<leader><S-Tab>', vim.cmd.bprevious)
 
 vim.g.python3_host_prog = '~/.venvs/nvim/bin/python'

@@ -672,7 +672,6 @@ require('lazy').setup({
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         clangd = {},
-        omnisharp = {},
         -- gopls = {},
         -- pyright = {},
         -- rust_analyzer = {},
@@ -746,6 +745,10 @@ require('lazy').setup({
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
+        ensure_installed = {
+          'omnisharp',
+          'clangd',
+        },
         automatic_installation = false,
         handlers = {
           function(server_name)
@@ -1026,7 +1029,7 @@ require('lazy').setup({
   --    This is the easiest way to modularize your config.
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  -- { import = 'custom.plugins' },
+  { import = 'custom.plugins' },
   --
   -- For additional information with loading, sourcing and examples see `:help lazy.nvim-🔌-plugin-spec`
   -- Or use telescope!
@@ -1059,21 +1062,18 @@ require('lazy').setup({
 vim.opt.shellcmdflag = '-c'
 
 -- Custom init.lua configuration
-vim.lsp.config('omnisharp', {
-  cmd = { 'omnisharp' },
-  enable_roslyn_analyzers = true,
-  organize_imports_on_format = true,
-  enable_import_completion = true,
-})
-
 vim.keymap.set('n', '<leader>t', ':lcd %:p:h | terminal<CR>')
 vim.keymap.set('n', '<Tab>', ':tabnext<CR>')
 vim.keymap.set('n', '<S-Tab>', ':tabprevious<CR>')
-vim.keymap.set('n', '<leader>.', ':lua vim.lsp.buf.codeaction()')
+vim.keymap.set('n', '<leader>.', ':lua vim.lsp.buf.code_action()<CR>')
+vim.keymap.set('t', '<Esc>', [[<C-\><C-n>]])
+vim.keymap.set('n', '<leader><Tab>', ':bnext<CR>')
+vim.keymap.set('n', '<leader><S-Tab>', vim.cmd.bprevious)
 
-vim.g.python3_host_prog = vim.fn.expand '~/.venvs/neovim/bin/python'
+vim.keymap.set('n', '<leader><C-t>', ':tabnew | e .<CR>')
 
 -- vim.api.nvim_create_autocmd('BufWritePre', {
 --   pattern = { '*.cpp', '*.hpp', '*.c', '*.h' },
 --   command = '!clang-format -i %',
 -- })
+vim.g.python3_host_prog = '~/.venvs/nvim/bin/python'

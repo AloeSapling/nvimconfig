@@ -219,10 +219,6 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
-vim.api.nvim_create_autocmd('BufWritePre', {
-  pattern = { '*.cpp', '*.hpp', '*.c', '*.h' },
-  command = '!clang-format -i %',
-})
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
@@ -675,7 +671,8 @@ require('lazy').setup({
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        -- clangd = {},
+        clangd = {},
+        omnisharp = {},
         -- gopls = {},
         -- pyright = {},
         -- rust_analyzer = {},
@@ -685,7 +682,27 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
-        -- ts_ls = {},
+        ts_ls = {
+          settings = {
+            typescript = {
+              inlayHints = { includeInlayEnumMemberValueHints = true },
+            },
+          },
+          on_attach = function(client, bufnr)
+            -- Key mappings
+            local opts = { buffer = bufnr, silent = true }
+            vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+            vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
+            vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
+            vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, opts) -- ← auto-import lives here
+            vim.keymap.set('n', '<leader>f', function()
+              vim.lsp.buf.format { async = true }
+            end, opts)
+          end,
+        },
+        eslint = {},
+        tailwindcss = {},
+        jsonls = {},
         --
 
         lua_ls = {
@@ -720,16 +737,15 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
+        'omnisharp',
+        'clangd',
+        'ts_ls',
+        'eslint',
+        'jsonls',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
-        ensure_installed = {
-          'omnisharp',
-          'clangd',
-          'clang-format',
-          'codelldb',
-        },
         automatic_installation = false,
         handlers = {
           function(server_name)
@@ -844,7 +860,7 @@ require('lazy').setup({
         -- <c-k>: Toggle signature help
         --
         -- See :h blink-cmp-config-keymap for defining your own keymap
-        preset = 'default',
+        preset = 'super-tab',
 
         -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
         --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
@@ -953,7 +969,24 @@ require('lazy').setup({
     main = 'nvim-treesitter.config', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = {
+        'bash',
+        'c',
+        'diff',
+        'lua',
+        'luadoc',
+        'markdown',
+        'markdown_inline',
+        'query',
+        'vim',
+        'vimdoc',
+        'typescript',
+        'tsx',
+        'javascript',
+        'html',
+        'css',
+        'json',
+      },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -1036,3 +1069,11 @@ vim.lsp.config('omnisharp', {
 vim.keymap.set('n', '<leader>t', ':lcd %:p:h | terminal<CR>')
 vim.keymap.set('n', '<Tab>', ':tabnext<CR>')
 vim.keymap.set('n', '<S-Tab>', ':tabprevious<CR>')
+vim.keymap.set('n', '<leader>.', ':lua vim.lsp.buf.codeaction()')
+
+vim.g.python3_host_prog = vim.fn.expand '~/.venvs/neovim/bin/python'
+
+-- vim.api.nvim_create_autocmd('BufWritePre', {
+--   pattern = { '*.cpp', '*.hpp', '*.c', '*.h' },
+--   command = '!clang-format -i %',
+-- })

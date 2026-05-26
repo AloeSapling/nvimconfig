@@ -87,6 +87,7 @@ P.S. You can delete this when you're done too. It's your config now! :)
 -- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
+
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
@@ -681,27 +682,28 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
-        ts_ls = {
-          settings = {
-            typescript = {
-              inlayHints = { includeInlayEnumMemberValueHints = true },
-            },
-          },
-          on_attach = function(client, bufnr)
-            -- Key mappings
-            local opts = { buffer = bufnr, silent = true }
-            vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
-            vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
-            vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
-            vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, opts) -- ← auto-import lives here
-            vim.keymap.set('n', '<leader>f', function()
-              vim.lsp.buf.format { async = true }
-            end, opts)
-          end,
-        },
+        -- ts_ls = {
+        --   settings = {
+        --     typescript = {
+        --       inlayHints = { includeInlayEnumMemberValueHints = true },
+        --     },
+        --   },
+        --   on_attach = function(client, bufnr)
+        --     -- Key mappings
+        --     local opts = { buffer = bufnr, silent = true }
+        --     vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+        --     vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
+        --     vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
+        --     vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, opts) -- ← auto-import lives here
+        --     vim.keymap.set('n', '<leader>f', function()
+        --       vim.lsp.buf.format { async = true }
+        --     end, opts)
+        --   end,
+        -- },
         eslint = {},
         tailwindcss = {},
         jsonls = {},
+        buf_ls = {},
         --
 
         lua_ls = {
@@ -736,19 +738,15 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
-        'omnisharp',
         'clangd',
-        'ts_ls',
+        'buf_ls',
+        -- 'ts_ls',
         'eslint',
         'jsonls',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
-        ensure_installed = {
-          'omnisharp',
-          'clangd',
-        },
         automatic_installation = false,
         handlers = {
           function(server_name)
@@ -759,6 +757,13 @@ require('lazy').setup({
             server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
             require('lspconfig')[server_name].setup(server)
           end,
+        },
+      }
+
+      require('mason').setup {
+        registries = {
+          'github:mason-org/mason-registry',
+          'github:Crashdummyy/mason-registry',
         },
       }
     end,
@@ -796,6 +801,11 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
+        javascript = { 'prettier' },
+        typescript = { 'prettier' },
+        json = { 'prettier' },
+        css = { 'prettier' },
+        html = { 'prettier' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
@@ -969,8 +979,8 @@ require('lazy').setup({
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
-    main = 'nvim-treesitter.config', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
+    lazy = false,
     opts = {
       ensure_installed = {
         'bash',
@@ -1001,12 +1011,20 @@ require('lazy').setup({
       },
       indent = { enable = true, disable = { 'ruby' } },
     },
+
     -- There are additional nvim-treesitter modules that you can use to interact
     -- with nvim-treesitter. You should go explore a few and see what interests you:
     --
     --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
     --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+  },
+  {
+    'windwp/nvim-ts-autotag',
+    dependencies = { 'nvim-treesitter/nvim-treesitter' },
+    config = function()
+      require('nvim-ts-autotag').setup()
+    end,
   },
 
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
@@ -1061,19 +1079,83 @@ require('lazy').setup({
 -- vim: ts=2 sts=2 sw=2 et
 vim.opt.shellcmdflag = '-c'
 
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = { 'typescriptreact' },
+  callback = function()
+    vim.treesitter.start(0, 'tsx')
+  end,
+})
+
 -- Custom init.lua configuration
-vim.keymap.set('n', '<leader>t', ':lcd %:p:h | terminal<CR>')
+vim.keymap.set('n', '<leader><C-t>', ':lcd %:p:h | terminal<CR>')
 vim.keymap.set('n', '<Tab>', ':tabnext<CR>')
 vim.keymap.set('n', '<S-Tab>', ':tabprevious<CR>')
 vim.keymap.set('n', '<leader>.', ':lua vim.lsp.buf.code_action()<CR>')
-vim.keymap.set('t', '<Esc>', [[<C-\><C-n>]])
+vim.keymap.set('t', '<C-x>', [[<C-\><C-n>]])
 vim.keymap.set('n', '<leader><Tab>', ':bnext<CR>')
 vim.keymap.set('n', '<leader><S-Tab>', vim.cmd.bprevious)
 
-vim.keymap.set('n', '<leader><C-t>', ':tabnew | e .<CR>')
+vim.keymap.set('n', '<leader>t', ':tabe %:h<CR>')
+
+vim.g.python3_host_prog = '~/.venvs/nvim/bin/python'
+
+vim.opt.tabstop = 4
+vim.opt.shiftwidth = 4
+vim.opt.expandtab = true
+
+-- Remove line number and git signs clutter from the left when doing a diffView
+local diffview_au = vim.api.nvim_create_augroup('DiffviewAu', { clear = true })
+
+vim.api.nvim_create_autocmd('User', {
+  group = diffview_au,
+  pattern = 'DiffviewDiffBufRead',
+  callback = function()
+    vim.opt_local.number = false
+    vim.opt_local.relativenumber = false
+    vim.opt_local.signcolumn = 'no'
+  end,
+})
+
+-- vim.api.nvim_create_autocmd('BufWinEnter', {
+--   group = diffview_au,
+--   pattern = '*',
+--   callback = function()
+--     local name = vim.fn.bufname()
+--     if name:match '^diffview://' or name:match 'DiffviewFilePanel' then
+--       vim.opt_local.number = false
+--       vim.opt_local.relativenumber = false
+--       vim.opt_local.signcolumn = 'no'
+--     end
+--   end,
+-- })
 
 -- vim.api.nvim_create_autocmd('BufWritePre', {
 --   pattern = { '*.cpp', '*.hpp', '*.c', '*.h' },
 --   command = '!clang-format -i %',
 -- })
-vim.g.python3_host_prog = '~/.venvs/nvim/bin/python'
+-- vim.env.DOTNET_USE_POLLING_FILE_WATCHER = '1'
+require('roslyn_filewatch').setup {
+  client_names = { 'roslyn' },
+
+  preset = 'large', -- better defaults for WSL
+  solution_aware = true,
+  respect_gitignore = true,
+
+  -- Aggressive ignoring
+  ignore_dirs = {
+    'bin',
+    'obj',
+    '.git',
+    '.vs',
+    'packages',
+    '**/bin',
+    '**/obj',
+  },
+
+  -- This is key for the warning you see:
+  backend = 'watchman', -- or "poll" if watchman doesn't work
+  -- backend = "poll",        -- fallback (higher CPU but very stable)
+
+  diagnostic_throttling = { enabled = true, debounce_ms = 400 },
+  processing_debounce_ms = 250,
+}
